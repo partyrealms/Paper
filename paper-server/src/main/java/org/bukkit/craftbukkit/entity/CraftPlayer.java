@@ -6,8 +6,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.mojang.authlib.GameProfile;
 import com.mojang.datafixers.util.Pair;
-import io.netty.buffer.Unpooled;
 import io.papermc.paper.FeatureHooks;
+import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.entity.LookAnchor;
 import io.papermc.paper.entity.PaperPlayerGiveResult;
 import io.papermc.paper.entity.PlayerGiveResult;
@@ -102,7 +102,6 @@ import net.minecraft.server.players.UserWhiteListEntry;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.food.FoodData;
@@ -120,6 +119,7 @@ import org.bukkit.BanList;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Effect;
+import org.bukkit.EntityEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Input;
 import org.bukkit.Instrument;
@@ -172,7 +172,6 @@ import org.bukkit.craftbukkit.map.CraftMapView;
 import org.bukkit.craftbukkit.map.RenderData;
 import org.bukkit.craftbukkit.potion.CraftPotionEffectType;
 import org.bukkit.craftbukkit.potion.CraftPotionUtil;
-import org.bukkit.craftbukkit.profile.CraftPlayerProfile;
 import org.bukkit.craftbukkit.scoreboard.CraftScoreboard;
 import org.bukkit.craftbukkit.util.CraftChatMessage;
 import org.bukkit.craftbukkit.util.CraftLocation;
@@ -187,7 +186,6 @@ import org.bukkit.event.player.PlayerExpCooldownChangeEvent;
 import org.bukkit.event.player.PlayerHideEntityEvent;
 import org.bukkit.event.player.PlayerRegisterChannelEvent;
 import org.bukkit.event.player.PlayerShowEntityEvent;
-import org.bukkit.event.player.PlayerSpawnChangeEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerUnregisterChannelEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -200,7 +198,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.messaging.StandardMessenger;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.profile.PlayerProfile;
 import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 
@@ -224,6 +221,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     private BorderChangeListener clientWorldBorderListener = this.createWorldBorderListener();
     public org.bukkit.event.player.PlayerResourcePackStatusEvent.Status resourcePackStatus; // Paper - more resource pack API
     private static final boolean DISABLE_CHANNEL_LIMIT = System.getProperty("paper.disableChannelLimit") != null; // Paper - add a flag to disable the channel limit
+    private boolean simplifyContainerDesyncCheck = GlobalConfiguration.get().unsupportedSettings.simplifyRemoteItemMatching;
     private long lastSaveTime; // Paper - getLastPlayed replacement API
 
     public CraftPlayer(CraftServer server, ServerPlayer entity) {
@@ -2464,7 +2462,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     private void sendCustomPayload(ResourceLocation id, byte[] message) {
-        ClientboundCustomPayloadPacket packet = new ClientboundCustomPayloadPacket(new DiscardedPayload(id, Unpooled.wrappedBuffer(message)));
+        ClientboundCustomPayloadPacket packet = new ClientboundCustomPayloadPacket(new DiscardedPayload(id, message));
         this.getHandle().connection.send(packet);
     }
 
@@ -2830,14 +2828,9 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
     }
 
     public void updateScaledHealth(boolean sendHealth) {
-        AttributeMap attributemapserver = this.getHandle().getAttributes();
-        Collection<AttributeInstance> set = attributemapserver.getSyncableAttributes();
-
-        this.injectScaledMaxHealth(set, true);
-
         // SPIGOT-3813: Attributes before health
         if (this.getHandle().connection != null) {
-            this.getHandle().connection.send(new ClientboundUpdateAttributesPacket(this.getHandle().getId(), set));
+            this.getHandle().connection.send(new ClientboundUpdateAttributesPacket(this.getHandle().getId(), Set.of(this.getScaledMaxHealth())));
             if (sendHealth) {
                 this.sendHealthUpdate();
             }
@@ -2877,8 +2870,11 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
                 break;
             }
         }
+        collection.add(getScaledMaxHealth());
+    }
+
+    public AttributeInstance getScaledMaxHealth() {
         AttributeInstance dummy = new AttributeInstance(Attributes.MAX_HEALTH, (attribute) -> { });
-        // Spigot start
         double healthMod = this.scaledHealth ? this.healthScale : this.getMaxHealth();
         if ( healthMod >= Float.MAX_VALUE || healthMod <= 0 )
         {
@@ -2886,8 +2882,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
             this.getServer().getLogger().warning( this.getName() + " tried to crash the server with a large health attribute" );
         }
         dummy.setBaseValue(healthMod);
-        // Spigot end
-        collection.add(dummy);
+        return dummy;
     }
 
     @Override
@@ -3547,10 +3542,11 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
     // Paper start - entity effect API
     @Override
-    public void sendEntityEffect(final org.bukkit.EntityEffect effect, final org.bukkit.entity.Entity target) {
-        if (this.getHandle().connection == null || !effect.isApplicableTo(target)) {
+    public void sendEntityEffect(final EntityEffect effect, final org.bukkit.entity.Entity target) {
+        if (this.getHandle().connection == null) {
             return;
         }
+        Preconditions.checkArgument(effect.isApplicableTo(target), "Entity effect cannot apply to the target");
         this.getHandle().connection.send(new net.minecraft.network.protocol.game.ClientboundEntityEventPacket(((CraftEntity) target).getHandle(), effect.getData()));
     }
     // Paper end - entity effect API
@@ -3584,5 +3580,47 @@ public class CraftPlayer extends CraftHumanEntity implements Player {
 
         handle.containerMenu.broadcastChanges();
         return new PaperPlayerGiveResult(leftovers.build(), drops.build());
+    }
+
+    @Override
+    public float getSidewaysMovement() {
+        final boolean leftMovement = this.getHandle().getLastClientInput().left();
+        final boolean rightMovement = this.getHandle().getLastClientInput().right();
+
+        return leftMovement == rightMovement ? 0 : leftMovement ? 1 : -1;
+    }
+
+    @Override
+    public float getForwardsMovement() {
+        final boolean forwardMovement = this.getHandle().getLastClientInput().forward();
+        final boolean backwardMovement = this.getHandle().getLastClientInput().backward();
+
+        return forwardMovement == backwardMovement ? 0 : forwardMovement ? 1 : -1;
+    }
+
+    @Override
+    public int getDeathScreenScore() {
+        return getHandle().getScore();
+    }
+
+    @Override
+    public void setDeathScreenScore(final int score) {
+        getHandle().setScore(score);
+    }
+
+    /**
+     * Returns whether container desync checks should skip the full item comparison of remote carried and changed slots
+     * and should instead only check their type and amount.
+     * <p>
+     * This is useful if the client is not able to produce the same item stack (or as of 1.21.5, its data hashes) as the server.
+     *
+     * @return whether to simplify container desync checks
+     */
+    public boolean simplifyContainerDesyncCheck() {
+        return simplifyContainerDesyncCheck;
+    }
+
+    public void setSimplifyContainerDesyncCheck(final boolean simplifyContainerDesyncCheck) {
+        this.simplifyContainerDesyncCheck = simplifyContainerDesyncCheck;
     }
 }
