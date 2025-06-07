@@ -5,7 +5,7 @@ import io.papermc.paper.FeatureHooks;
 import io.papermc.paper.configuration.constraint.Constraints;
 import io.papermc.paper.configuration.type.number.DoubleOr;
 import io.papermc.paper.configuration.type.number.IntOr;
-import io.papermc.paper.util.ItemObfuscationBinding;
+import io.papermc.paper.util.sanitizer.ItemObfuscationBinding;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.core.component.DataComponents;
@@ -185,8 +185,6 @@ public class GlobalConfiguration extends ConfigurationPart {
         public CompressionFormat compressionFormat = CompressionFormat.ZLIB;
         @Comment("This setting controls if equipment should be updated when handling certain player actions.")
         public boolean updateEquipmentOnPlayerActions = true;
-        @Comment("Only checks an item's amount and type instead of its full data during inventory desync checks.")
-        public boolean simplifyRemoteItemMatching = false;
 
         public enum CompressionFormat {
             GZIP,
@@ -356,6 +354,9 @@ public class GlobalConfiguration extends ConfigurationPart {
         public IntOr.Default compressionLevel = IntOr.Default.USE_DEFAULT;
         @Comment("Defines the leniency distance added on the server to the interaction range of a player when validating interact packets.")
         public DoubleOr.Default clientInteractionLeniencyDistance = DoubleOr.Default.USE_DEFAULT;
+        @Comment("Defines how many orbs groups can exist in an area.")
+        @Constraints.Min(1)
+        public IntOr.Default xpOrbGroupsPerArea = IntOr.Default.USE_DEFAULT;
     }
 
     public BlockUpdates blockUpdates;
