@@ -1,6 +1,6 @@
 --- a/net/minecraft/world/item/Items.java
 +++ b/net/minecraft/world/item/Items.java
-@@ -1313,10 +_,10 @@
+@@ -1364,10 +_,10 @@
      );
      public static final Item BUCKET = registerItem("bucket", properties -> new BucketItem(Fluids.EMPTY, properties), new Item.Properties().stacksTo(16));
      public static final Item WATER_BUCKET = registerItem(
@@ -13,7 +13,7 @@
      );
      public static final Item POWDER_SNOW_BUCKET = registerItem(
          "powder_snow_bucket",
-@@ -1327,7 +_,7 @@
+@@ -1378,7 +_,7 @@
      public static final Item LEATHER = registerItem("leather");
      public static final Item MILK_BUCKET = registerItem(
          "milk_bucket",
@@ -22,7 +22,7 @@
      );
      public static final Item PUFFERFISH_BUCKET = registerItem(
          "pufferfish_bucket",
-@@ -1830,7 +_,7 @@
+@@ -1882,7 +_,7 @@
      public static final Item BEETROOT = registerItem("beetroot", new Item.Properties().food(Foods.BEETROOT));
      public static final Item BEETROOT_SEEDS = registerItem("beetroot_seeds", createBlockItemWithCustomItemName(Blocks.BEETROOTS));
      public static final Item BEETROOT_SOUP = registerItem("beetroot_soup", new Item.Properties().stacksTo(1).food(Foods.BEETROOT_SOUP).usingConvertsTo(BOWL));
@@ -31,7 +31,7 @@
      public static final Item SPLASH_POTION = registerItem(
          "splash_potion", SplashPotionItem::new, new Item.Properties().stacksTo(1).component(DataComponents.POTION_CONTENTS, PotionContents.EMPTY)
      );
-@@ -2058,7 +_,7 @@
+@@ -2116,7 +_,7 @@
      );
      public static final Item HONEY_BOTTLE = registerItem(
          "honey_bottle",

@@ -24,7 +24,7 @@
                      Entity vehicle = entity.getVehicle();
                      if (vehicle != null) {
                          vehicle.setPortalCooldown();
-@@ -107,7 +_,13 @@
+@@ -107,7 +_,20 @@
  
      @Override
      protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier) {
