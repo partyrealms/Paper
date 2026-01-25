@@ -1,0 +1,42 @@
+--- a/net/minecraft/world/item/Items.java
++++ b/net/minecraft/world/item/Items.java
+@@ -1424,10 +_,10 @@
+     );
+     public static final Item BUCKET = registerItem("bucket", properties -> new BucketItem(Fluids.EMPTY, properties), new Item.Properties().stacksTo(16));
+     public static final Item WATER_BUCKET = registerItem(
+-        "water_bucket", properties -> new BucketItem(Fluids.WATER, properties), new Item.Properties().craftRemainder(BUCKET).stacksTo(1)
++        "water_bucket", properties -> new BucketItem(Fluids.WATER, properties), new Item.Properties().stacksTo(1) // PartyRealms - Remove crafting remainder from some items
+     );
+     public static final Item LAVA_BUCKET = registerItem(
+-        "lava_bucket", properties -> new BucketItem(Fluids.LAVA, properties), new Item.Properties().craftRemainder(BUCKET).stacksTo(1)
++        "lava_bucket", properties -> new BucketItem(Fluids.LAVA, properties), new Item.Properties().stacksTo(1) // PartyRealms - Remove crafting remainder from some items
+     );
+     public static final Item POWDER_SNOW_BUCKET = registerItem(
+         "powder_snow_bucket",
+@@ -1438,7 +_,7 @@
+     public static final Item LEATHER = registerItem("leather");
+     public static final Item MILK_BUCKET = registerItem(
+         "milk_bucket",
+-        new Item.Properties().craftRemainder(BUCKET).component(DataComponents.CONSUMABLE, Consumables.MILK_BUCKET).usingConvertsTo(BUCKET).stacksTo(1)
++        new Item.Properties().component(DataComponents.CONSUMABLE, Consumables.MILK_BUCKET).usingConvertsTo(BUCKET).stacksTo(1) // PartyRealms - Remove crafting remainder from some items
+     );
+     public static final Item PUFFERFISH_BUCKET = registerItem(
+         "pufferfish_bucket",
+@@ -1929,7 +_,7 @@
+     public static final Item BEETROOT = registerItem("beetroot", new Item.Properties().food(Foods.BEETROOT));
+     public static final Item BEETROOT_SEEDS = registerItem("beetroot_seeds", createBlockItemWithCustomItemName(Blocks.BEETROOTS));
+     public static final Item BEETROOT_SOUP = registerItem("beetroot_soup", new Item.Properties().stacksTo(1).food(Foods.BEETROOT_SOUP).usingConvertsTo(BOWL));
+-    public static final Item DRAGON_BREATH = registerItem("dragon_breath", new Item.Properties().craftRemainder(GLASS_BOTTLE).rarity(Rarity.UNCOMMON));
++    public static final Item DRAGON_BREATH = registerItem("dragon_breath", new Item.Properties().rarity(Rarity.UNCOMMON)); // PartyRealms - Remove crafting remainder from some items
+     public static final Item SPLASH_POTION = registerItem(
+         "splash_potion", SplashPotionItem::new, new Item.Properties().stacksTo(1).component(DataComponents.POTION_CONTENTS, PotionContents.EMPTY)
+     );
+@@ -2193,7 +_,7 @@
+     );
+     public static final Item HONEY_BOTTLE = registerItem(
+         "honey_bottle",
+-        new Item.Properties().craftRemainder(GLASS_BOTTLE).food(Foods.HONEY_BOTTLE, Consumables.HONEY_BOTTLE).usingConvertsTo(GLASS_BOTTLE).stacksTo(16)
++        new Item.Properties().food(Foods.HONEY_BOTTLE, Consumables.HONEY_BOTTLE).usingConvertsTo(GLASS_BOTTLE).stacksTo(16) // PartyRealms - Remove crafting remainder from some items
+     );
+     public static final Item HONEYCOMB_BLOCK = registerBlock(Blocks.HONEYCOMB_BLOCK);
+     public static final Item LODESTONE = registerBlock(Blocks.LODESTONE);
