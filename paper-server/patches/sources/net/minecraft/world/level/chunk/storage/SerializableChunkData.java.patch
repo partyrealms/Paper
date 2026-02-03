@@ -86,6 +86,15 @@
          chunkAccess.setLightCorrect(this.lightCorrect);
          EnumSet<Heightmap.Types> set = EnumSet.noneOf(Heightmap.Types.class);
  
+@@ -333,7 +_,7 @@
+     }
+ 
+     private static void logErrors(ChunkPos chunkPos, int sectionY, String error) {
+-        LOGGER.error("Recoverable errors when loading section [{}, {}, {}]: {}", chunkPos.x, sectionY, chunkPos.z, error);
++        // LOGGER.error("Recoverable errors when loading section [{}, {}, {}]: {}", chunkPos.x, sectionY, chunkPos.z, error); PartyRealms - Disable chunk data load logging errors.
+     }
+ 
+     public static SerializableChunkData copyOf(ServerLevel level, ChunkAccess chunk) {
 @@ -394,6 +_,12 @@
              CompoundTag compoundTag = packStructureData(
                  StructurePieceSerializationContext.fromLevel(level), pos, chunk.getAllStarts(), chunk.getAllReferences()
