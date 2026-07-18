@@ -546,7 +546,7 @@
                  }
              }
          }
-@@ -734,27 +_,40 @@
+@@ -734,27 +_,43 @@
          if (entityOrPart != null && this.player.isWithinEntityInteractionRange(entityOrPart, 3.0)) {
              ItemStack pickResult = entityOrPart.getPickResult();
              if (pickResult != null && !pickResult.isEmpty()) {
@@ -565,9 +565,12 @@
 +            final int sourceSlot = i;
 +            final int targetSlot = Inventory.isHotbarSlot(sourceSlot) ? sourceSlot : inventory.getSuitableHotbarSlot();
 +            final org.bukkit.entity.Player bukkitPlayer = this.player.getBukkitEntity();
++            // PartyRealms start - Allow changing item in PlayerPickEvent
 +            final io.papermc.paper.event.player.PlayerPickItemEvent event = entity != null
-+                ? new io.papermc.paper.event.player.PlayerPickEntityEvent(bukkitPlayer, entity.getBukkitEntity(), includeData, targetSlot, sourceSlot)
-+                : new io.papermc.paper.event.player.PlayerPickBlockEvent(bukkitPlayer, org.bukkit.craftbukkit.block.CraftBlock.at(this.player.level(), blockPos), includeData, targetSlot, sourceSlot);
++                ? new io.papermc.paper.event.player.PlayerPickEntityEvent(bukkitPlayer, entity.getBukkitEntity(), includeData, targetSlot, sourceSlot, stack.getBukkitStack())
++                : new io.papermc.paper.event.player.PlayerPickBlockEvent(bukkitPlayer, org.bukkit.craftbukkit.block.CraftBlock.at(this.player.level(), blockPos), includeData,
++                targetSlot, sourceSlot, stack.getBukkitStack());
++            // PartyRealms end - Allow changing item in PlayerPickEvent
 +            if (!event.callEvent()) {
 +                return;
 +            }
@@ -584,7 +587,7 @@
                  }
              } else if (this.player.hasInfiniteMaterials()) {
 -                inventory.addAndPickItem(stack);
-+                inventory.addAndPickItem(stack, event.getTargetSlot()); // Paper - Add PlayerPickItemEvent
++                inventory.addAndPickItem(CraftItemStack.asNMSCopy(event.getReplacementItem()), event.getTargetSlot()); // Paper - Add PlayerPickItemEvent // PartyRealms - Allow changing item in PlayerPickEvent
              }
  
              this.send(new ClientboundSetHeldSlotPacket(inventory.getSelectedSlot()));
